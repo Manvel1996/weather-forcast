@@ -1,12 +1,16 @@
 const API_KEY = "8d288c369cb01b7615b4099e7706d00c";
-const searchForm = document.querySelector(".search-form");
-const forcastTable = document.querySelector(".weather-forcast__table");
-
-// Modal
+const searchForm = document.querySelector(".weather__form");
+const searchCity = document.querySelector(".weather__form-search");
+const weatherTable = document.querySelector(".weather__table");
 
 const modal = document.querySelector(".modal");
 const modalClose = document.querySelector(".modal__close");
 const modalText = document.querySelector(".modal__text");
+
+function openModal(text) {
+  modalText.innerText = text;
+  modal.style.display = "block";
+}
 
 modalClose.addEventListener("click", () => {
   modal.style.display = "none";
@@ -18,103 +22,82 @@ window.addEventListener("click", (event) => {
   }
 });
 
-// Search form
-
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  const city = Array.from(searchForm[0].value).join("").trim();
+  const city = searchCity.value.trim();
 
-  // let xhr = new XMLHttpRequest();
-  // xhr.open(
-  //   "GET",
-  //   `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&cnt=40&units=metric`
-  // );
-  // xhr.send();
-  // xhr.onload = function () {
-  //   const data = JSON.parse(xhr.responseText);
-  //   if (data.cod !== "200") {
-  //     modalText.innerText = data.message;
-  //     modal.style.display = "block";
-  //     return;
-  //   }
-  //   weatherTableCreator(data.list);
-  // };
-  // xhr.onerror = function () {
-  //   modalText.innerText = data.message;
-  //   modal.style.display = "block";
-  // };
-
-  fetch(
+  let xhr = new XMLHttpRequest();
+  xhr.open(
+    "GET",
     `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&cnt=40&units=metric`
-  )
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.cod !== "200") {
-        modalText.innerText = data.message;
-        modal.style.display = "block";
-        return;
-      }
-      weatherTableCreator(data.list);
-    })
-    .catch(() => {
-      modalText.innerText = data.message;
-      modal.style.display = "block";
-    });
+  );
+
+  xhr.send();
+
+  xhr.onload = function () {
+    const data = JSON.parse(xhr.responseText);
+
+    if (xhr.status !== 200) {
+      return openModal(data.message);
+    }
+    weatherTableCreator(data.list);
+  };
+
+  xhr.onerror = function () {
+    return openModal(data.message);
+  };
 });
 
-// weather table creator function
-
 function weatherTableCreator(list) {
-  if (list) forcastTable.innerHTML = "";
+  if (list) weatherTable.innerHTML = "";
 
   list?.forEach((elem) => {
-    const weatherTimeBlock = document.createElement("div");
-    weatherTimeBlock.classList.add("weather-time-block");
+    const weatherBlock = document.createElement("div");
+    weatherBlock.classList.add("weather-block");
 
-    const weatherTimeBlockImg = document.createElement("img");
-    weatherTimeBlockImg.setAttribute(
+    const img = document.createElement("img");
+    img.setAttribute(
       "src",
       `https://openweathermap.org/img/w/${elem.weather[0].icon}.png`
     );
-    weatherTimeBlockImg.setAttribute("alt", elem.weather[0].description);
-    weatherTimeBlockImg.classList.add("weather-time-block__img");
+    img.setAttribute("alt", elem.weather[0].description);
+    img.classList.add("weather-block__img");
 
-    const weatherTimeBlockCelsius = document.createElement("p");
-    weatherTimeBlockCelsius.innerText = elem.main.temp.toFixed() + " °C";
-    weatherTimeBlockCelsius.classList.add("weather-time-block__celsius");
+    const celsius = document.createElement("p");
+    celsius.innerText = elem.main.temp.toFixed() + " °C";
+    celsius.classList.add("weather-block__celsius");
 
-    const weatherTimeBlockTime = document.createElement("p");
-    weatherTimeBlockTime.innerText = elem.dt_txt;
-    weatherTimeBlockTime.classList.add("weather-time-block__time");
+    const time = document.createElement("p");
+    time.innerText = elem.dt_txt;
+    time.classList.add("weather-block__time");
 
-    const weatherTimeBlockMinCelsius = document.createElement("p");
-    weatherTimeBlockMinCelsius.innerText =
-      "Minimal: " + elem.main.temp_min + " °C";
-    weatherTimeBlockMinCelsius.classList.add("weather-time-block__min-celsius");
+    const minCelsius = document.createElement("p");
+    minCelsius.innerText = "Minimal: " + elem.main.temp_min + " °C";
+    minCelsius.classList.add("weather-block__text");
 
-    const weatherTimeBlockMaxCelsius = document.createElement("p");
-    weatherTimeBlockMaxCelsius.innerText =
-      "Maximal: " + elem.main.temp_max + " °C";
-    weatherTimeBlockMaxCelsius.classList.add("weather-time-block__max-celsius");
-    const weatherTimeBlockWind = document.createElement("p");
-    weatherTimeBlockWind.innerText = "Wind: " + elem.wind.speed + " m/s";
-    weatherTimeBlockWind.classList.add("weather-time-block__wind");
+    const maxCelsius = document.createElement("p");
+    maxCelsius.innerText = "Maximal: " + elem.main.temp_max + " °C";
+    maxCelsius.classList.add("weather-block__text");
 
-    const weatherTimeBlockWindArrow = document.createElement("p");
-    weatherTimeBlockWindArrow.innerText = "\u2191";
-    weatherTimeBlockWindArrow.classList.add("weather-time-block__wind-arrow");
-    weatherTimeBlockWindArrow.style.transform = `rotate(${elem.wind.deg}deg)`;
+    const wind = document.createElement("p");
+    wind.innerText = "Wind: " + elem.wind.speed + " m/s";
+    wind.classList.add("weather-block__text");
 
-    weatherTimeBlock.append(
-      weatherTimeBlockImg,
-      weatherTimeBlockCelsius,
-      weatherTimeBlockTime,
-      weatherTimeBlockMinCelsius,
-      weatherTimeBlockMaxCelsius,
-      weatherTimeBlockWind,
-      weatherTimeBlockWindArrow
+    const windArrow = document.createElement("p");
+    windArrow.innerText = "\u2191";
+    windArrow.classList.add("weather-block__wind-arrow");
+    windArrow.style.transform = `rotate(${elem.wind.deg}deg)`;
+
+    weatherBlock.append(
+      img,
+      celsius,
+      time,
+      minCelsius,
+      maxCelsius,
+      wind,
+      windArrow
     );
 
-    forcastTable.appendChild(weatherTimeBlock);
+    weatherTable.appendChild(weatherBlock);
   });
 }
